@@ -6,7 +6,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,7 +19,14 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private TextView tvURL;
     private TextView tvSearch;
+    private TextView tvError;
+    private ProgressBar progressBar;
     public class GithubQueryTask extends AsyncTask<URL, Void, String> {
+        @Override
+        protected void onPreExecute(){
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
         @Override
         protected String doInBackground(URL... urls) {
             URL searchURL = urls[0];
@@ -33,8 +42,13 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String s) {
+            progressBar.setVisibility(View.INVISIBLE);
+
             if(s!=null && !s.equals("")){
                 tvSearch.setText(s);
+            }
+            else{
+                showErrorMessage();
             }
             super.onPostExecute(s);
         }
@@ -55,6 +69,16 @@ public class MainActivity extends AppCompatActivity {
         editText = (EditText) findViewById(R.id.edit_query);
         tvURL = (TextView) findViewById(R.id.text_view);
         tvSearch = (TextView) findViewById(R.id.next_tv);
+        tvError = (TextView) findViewById(R.id.tv_error);
+        progressBar = (ProgressBar) findViewById(R.id.loading_indicator);
+    }
+    private void showJSONData(){
+        tvError.setVisibility(View.INVISIBLE);
+        tvSearch.setVisibility(View.VISIBLE);
+    }
+    private void showErrorMessage(){
+        tvError.setVisibility(View.VISIBLE);
+        tvSearch.setVisibility(View.INVISIBLE);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
