@@ -1,9 +1,13 @@
 package com.example.android.sunshine;
 
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.*;
+import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,18 +19,87 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.net.URL;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String> {
     private EditText editText;
     private TextView tvURL;
     private TextView tvSearch;
     private TextView tvError;
     private ProgressBar progressBar;
+    private static final int GITHUB_SEARCH_ID = 22;
+    private static final String SEARCH_QUERY_URL_EXTRA = "query";
+
+
     @Override
     protected void onSaveInstanceState(Bundle outState){
-       outState.putString("URL", tvURL.getText().toString());
-       outState.putString("Result", tvSearch.getText().toString());
+        super.onSaveInstanceState(outState);
+      outState.putString(SEARCH_QUERY_URL_EXTRA, tvURL.getText().toString());
+     //  outState.putString("Result", tvSearch.getText().toString());
 
     }
+
+
+    @Override
+    public Loader<String> onCreateLoader(int id, final Bundle args) {
+
+        return new android.support.v4.content.AsyncTaskLoader<String>(this) {
+            @Override
+            protected void onStartLoading(){
+                super.onStartLoading();
+                if(args==null){
+                    return;
+                }
+
+                progressBar.setVisibility(View.VISIBLE);
+                forceLoad();
+
+            }
+            @Override
+            public String loadInBackground() {
+                String searchQueryURL = args.getString(SEARCH_QUERY_URL_EXTRA);
+                if(searchQueryURL == null || TextUtils.isEmpty(searchQueryURL)){
+                    return null;
+                }
+                String searchResults = null;
+                try{
+                    URL searchURL = new URL(searchQueryURL);
+
+                    searchResults = NetworkUtils.getResponsefromHTTPURL(searchURL);
+                    return searchResults;
+
+                }
+                catch (IOException e){
+                    e.printStackTrace();
+                    return null;
+                }
+
+
+
+
+           }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(Loader<String> loader, String data) {
+        progressBar.setVisibility(View.INVISIBLE);
+
+        if(data!=null && !data.equals("")){
+            tvSearch.setText(data);
+            showJSONData();
+        }
+        else{
+            showErrorMessage();
+        }
+
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<String> loader) {
+
+    }
+
+
     public class GithubQueryTask extends AsyncTask<URL, Void, String> {
         @Override
         protected void onPreExecute(){
@@ -62,10 +135,26 @@ public class MainActivity extends AppCompatActivity {
 
     public void makeGitHubSearchQuery(){
         String githubQuery = editText.getText().toString();
+
+        if(TextUtils.isEmpty(githubQuery)){
+            tvURL.setText("No Query Entered");
+            return;
+        }
         URL githubSearchURL = NetworkUtils.buildURL(githubQuery);
         tvURL.setText(githubSearchURL.toString());
         String gitHubSearchResult = null;
-        new GithubQueryTask().execute(githubSearchURL);
+       // new GithubQueryTask().execute(githubSearchURL);
+        Bundle bundle = new Bundle();
+        bundle.putString(SEARCH_QUERY_URL_EXTRA, githubSearchURL.toString());
+
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader<String> gitHubLoader = loaderManager.getLoader(GITHUB_SEARCH_ID);
+        if (gitHubLoader == null){
+            loaderManager.initLoader(GITHUB_SEARCH_ID,bundle,this);
+        }
+        else{
+            loaderManager.restartLoader(GITHUB_SEARCH_ID, bundle, this);
+        }
 
     }
     @Override
@@ -78,11 +167,12 @@ public class MainActivity extends AppCompatActivity {
         tvError = (TextView) findViewById(R.id.tv_error);
         progressBar = (ProgressBar) findViewById(R.id.loading_indicator);
         if(savedInstanceState!=null){
-            String URL = savedInstanceState.getString("URL");
-            String result = savedInstanceState.getString("Result");
-            tvSearch.setText(result);
-            tvURL.setText(URL);
+        //    String URL = savedInstanceState.getString("URL");
+        //    String result = savedInstanceState.getString("Result");
+        //    tvSearch.setText(result);
+        //    tvURL.setText(URL);
         }
+        getSupportLoaderManager().initLoader(GITHUB_SEARCH_ID,null, this);
     }
     private void showJSONData(){
         tvError.setVisibility(View.INVISIBLE);
