@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public Loader<String> onCreateLoader(int id, final Bundle args) {
 
         return new android.support.v4.content.AsyncTaskLoader<String>(this) {
+            private String mGitHubJson;
             @Override
             protected void onStartLoading(){
                 super.onStartLoading();
@@ -50,6 +51,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 }
 
                 progressBar.setVisibility(View.VISIBLE);
+                if (mGitHubJson!=null){
+                    deliverResult(mGitHubJson);
+                }
+                else
                 forceLoad();
 
             }
@@ -76,6 +81,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
 
            }
+
+            @Override
+            public void deliverResult(String data) {
+                mGitHubJson = data;
+                super.deliverResult(data);
+
+            }
         };
     }
 
