@@ -21,6 +21,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvSearch;
     private TextView tvError;
     private ProgressBar progressBar;
+    @Override
+    protected void onSaveInstanceState(Bundle outState){
+       outState.putString("URL", tvURL.getText().toString());
+       outState.putString("Result", tvSearch.getText().toString());
+
+    }
     public class GithubQueryTask extends AsyncTask<URL, Void, String> {
         @Override
         protected void onPreExecute(){
@@ -71,6 +77,12 @@ public class MainActivity extends AppCompatActivity {
         tvSearch = (TextView) findViewById(R.id.next_tv);
         tvError = (TextView) findViewById(R.id.tv_error);
         progressBar = (ProgressBar) findViewById(R.id.loading_indicator);
+        if(savedInstanceState!=null){
+            String URL = savedInstanceState.getString("URL");
+            String result = savedInstanceState.getString("Result");
+            tvSearch.setText(result);
+            tvURL.setText(URL);
+        }
     }
     private void showJSONData(){
         tvError.setVisibility(View.INVISIBLE);

@@ -16,10 +16,12 @@ import java.util.Scanner;
 
 public class NetworkUtils {
     final static String GITHUB_BASE_URL = "https://api.github.com/search/repositories";
+    final static String WEATHER_BASE_URL = "http://api.openweathermap.org/data/2.5/weather";
     final static String PARAM_QUERY = "q";
     final static String PARAM_SORT = "sort";
     public static URL buildURL(String text){
-        Uri builtUri = Uri.parse(GITHUB_BASE_URL).buildUpon().appendQueryParameter(PARAM_QUERY,text).appendQueryParameter(PARAM_SORT,"stars").build();
+        Uri builtUri = Uri.parse(GITHUB_BASE_URL).buildUpon().appendQueryParameter(PARAM_QUERY,text)
+        .appendQueryParameter(PARAM_SORT,"stars").build();
         URL url = null;
         try{
             url = new URL(builtUri.toString());
